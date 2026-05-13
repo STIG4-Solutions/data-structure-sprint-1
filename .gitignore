@@ -1,0 +1,40 @@
+# Compiled binaries
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+
+# Debug files
+*.pdb
+*.ilk
+*.exp
+
+# Build directories
+build/
+bin/
+obj/
+out/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.ncb
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# OS generated
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Valgrind / profiling
+massif.out.*
+callgrind.out.*
