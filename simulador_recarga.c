@@ -105,6 +105,61 @@ int ler_inteiro(const char *prompt, int min, int max)
     return valor;
 }
 
+void coletar_dados(SessaoRecarga *s) // Ponteiro que aponta para Struct
+{
+    int len;
+
+    printf("Nome do usuario: ");
+    fgets(s->nome, sizeof(s->nome), stdin); // fgets lê linha inteira
+    len = (int)strlen(s->nome);
+    if (len > 0 && s->nome[len - 1] == '\n')
+        s->nome[len - 1] = '\0';
+    if (s->nome[0] == '\0')
+        strcpy(s->nome, "Anonimo");
+
+    printf("\n  Opcoes de plano:\n");
+    printf("    1 -- Comum      (tarifa normal R$0,85 | ponta R$1,40)\n");
+    printf("    2 -- Fidelidade (tarifa fixa R$0,70/kWh)\n");
+    s->tipo_usuario = ler_inteiro("Selecione o plano (1 ou 2): ", 1, 2);
+
+    printf("\n  Horario de ponta: %dh00 ate %dh00 (tarifa mais cara)\n",
+           HORA_PONTA_INI, HORA_PONTA_FIM);
+    {
+        int h, m, lido, c;
+        do
+        {
+            printf("Hora de inicio (HH:MM): ");
+            lido = scanf("%d:%d", &h, &m);
+            do { c = getchar(); } while (c != '\n' && c != EOF);
+            if (lido != 2 || h < 0 || h > 23 || m < 0 || m > 59)
+                printf("  [ERRO] Formato invalido. Use HH:MM (ex: 19:30).\n");
+        } while (lido != 2 || h < 0 || h > 23 || m < 0 || m > 59);
+        s->hora_inicio   = h;
+        s->minuto_inicio = m;
+    }
+
+    printf("\n  Duracao maxima: %d minutos (8 horas)\n", DURACAO_MAX);
+    s->duracao_min = ler_inteiro("Duracao em minutos (1-480): ", DURACAO_MIN, DURACAO_MAX);
+}
+
+float calcular_tarifa(int hora, int tipo)
+{
+    if (tipo == TIPO_FIDELIDADE)
+        return TARIFA_FIDELIDADE;
+    if (hora >= HORA_PONTA_INI && hora <= HORA_PONTA_FIM)
+        return TARIFA_PONTA;
+    return TARIFA_NORMAL;
+}
+
+const char *nome_tarifa(int hora, int tipo)
+{
+    if (tipo == TIPO_FIDELIDADE)
+        return "Fidelidade";
+    if (hora >= HORA_PONTA_INI && hora <= HORA_PONTA_FIM)
+        return "Ponta";
+    return "Normal";
+}
+
 int main(void)
 {
     return 0;
