@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <windows.h>
 
 // Tarifas (R$/kWh)
 #define TARIFA_NORMAL     0.85f
@@ -162,13 +163,35 @@ const char *nome_tarifa(int hora, int tipo)
 
 void simular_recarga(SessaoRecarga *s)
 {
-    s->energia_kwh    = (POTENCIA_KW / 60.0f) * s->duracao_min;
-    s->tarifa_aplicada = calcular_tarifa(s->hora_inicio, s->tipo_usuario);
-    s->custo_total    = s->energia_kwh * s->tarifa_aplicada;
-    s->status         = CONCLUIDO;
+    int passo, i;
+    int total = s->duracao_min;
+    int tick  = (total / 20) + 1;
+
+    s->energia_kwh = 0.0f;
+    s->status      = CARREGANDO;
 
     exibir_status_led(CARREGANDO);
-    printf("Recarga simulada: %d minutos @ %.1f kW\n\n", s->duracao_min, POTENCIA_KW);
+    printf("Recarga iniciada: %d minutos @ %.1f kW\n\n", total, POTENCIA_KW);
+
+    for (passo = 1; passo <= total; passo++)
+    {
+        s->energia_kwh += POTENCIA_KW / 60.0f;
+
+        if (passo % tick == 0 || passo == total)
+        {
+            printf("\r  [");
+            for (i = 0; i < 20; i++)
+                printf(i < (passo * 20) / total ? "#" : ".");
+            printf("] %3d%%  %.2f kWh", (passo * 100) / total, s->energia_kwh);
+            fflush(stdout);
+            Sleep(180);
+        }
+    }
+
+    printf("\n\n");
+    s->tarifa_aplicada = calcular_tarifa(s->hora_inicio, s->tipo_usuario);
+    s->custo_total     = s->energia_kwh * s->tarifa_aplicada;
+    s->status          = CONCLUIDO;
 }
 
 void exibir_relatorio(const SessaoRecarga *s)
