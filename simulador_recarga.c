@@ -25,6 +25,27 @@
 #define DURACAO_MIN   1
 #define DURACAO_MAX 480
 
+typedef enum
+{
+    STANDBY    = 0, // LED verde fixo     -- aguardando
+    CARREGANDO = 1, // LED azul fixo      -- recarga ativa
+    CONCLUIDO  = 2, // LED verde piscando -- sessao OK
+    FALHA      = 3  // LED vermelho fixo  -- erro no sistema
+} StatusLED;
+
+typedef struct
+{
+    char      nome[50];
+    int       tipo_usuario;
+    int       hora_inicio;
+    int       minuto_inicio;
+    int       duracao_min;
+    float     energia_kwh;
+    float     tarifa_aplicada;
+    float     custo_total;
+    StatusLED status;
+} SessaoRecarga;
+
 int main(void)
 {
     return 0;
