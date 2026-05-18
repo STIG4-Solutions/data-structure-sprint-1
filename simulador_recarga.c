@@ -220,5 +220,39 @@ void exibir_relatorio(const SessaoRecarga *s)
 
 int main(void)
 {
+    SessaoRecarga sessao;
+    int nova_sessao;
+
+    exibir_cabecalho();
+
+    do
+    {
+        memset(&sessao, 0, sizeof(SessaoRecarga)); // Cada sessão começa do zero
+        sessao.status = STANDBY;
+
+        exibir_status_led(STANDBY);
+        coletar_dados(&sessao);
+        printf("\n");
+        simular_recarga(&sessao);
+        exibir_relatorio(&sessao);
+
+        switch (sessao.status)
+        {
+        case CONCLUIDO:
+            printf("Sessao encerrada. Desconecte o cabo com seguranca.\n\n");
+            break;
+        case FALHA:
+            printf("Sessao encerrada com falha. Contate o suporte.\n\n");
+            break;
+        default:
+            printf("Sessao encerrada.\n\n");
+            break;
+        }
+
+        nova_sessao = ler_inteiro("Iniciar nova sessao? (1=Sim / 0=Nao): ", 0, 1);
+        printf("\n");
+    } while (nova_sessao);
+
+    printf("Sistema encerrado. Ate logo!\n\n");
     return 0;
 }
