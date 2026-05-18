@@ -90,6 +90,21 @@ void exibir_status_led(StatusLED status)
     printf("\n");
 }
 
+int ler_inteiro(const char *prompt, int min, int max)
+{
+    int valor, c;
+    do
+    {
+        printf("%s", prompt);
+        if (scanf("%d", &valor) != 1)
+            valor = min - 1;
+        do { c = getchar(); } while (c != '\n' && c != EOF); // Descarta buffer até o fim da linha
+        if (valor < min || valor > max)
+            printf("  [ERRO] Entrada invalida. Digite entre %d e %d.\n", min, max);
+    } while (valor < min || valor > max);
+    return valor;
+}
+
 int main(void)
 {
     return 0;
