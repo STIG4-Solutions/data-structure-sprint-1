@@ -160,6 +160,64 @@ const char *nome_tarifa(int hora, int tipo)
     return "Normal";
 }
 
+void simular_recarga(SessaoRecarga *s)
+{
+    s->energia_kwh    = (POTENCIA_KW / 60.0f) * s->duracao_min;
+    s->tarifa_aplicada = calcular_tarifa(s->hora_inicio, s->tipo_usuario);
+    s->custo_total    = s->energia_kwh * s->tarifa_aplicada;
+    s->status         = CONCLUIDO;
+
+    exibir_status_led(CARREGANDO);
+    printf("Recarga simulada: %d minutos @ %.1f kW\n\n", s->duracao_min, POTENCIA_KW);
+}
+
+void exibir_relatorio(const SessaoRecarga *s)
+{
+    char buf[40];
+    int h = s->duracao_min / 60;
+    int m = s->duracao_min % 60;
+    int fim_total = s->hora_inicio * 60 + s->minuto_inicio + s->duracao_min;
+    int hora_fim  = (fim_total / 60) % 24;
+    int min_fim   = fim_total % 60;
+    const char *tipo_str   = (s->tipo_usuario == TIPO_FIDELIDADE) ? "Fidelidade" : "Comum";
+    const char *tarifa_str = nome_tarifa(s->hora_inicio, s->tipo_usuario);
+
+    separador();
+    printf("|        RELATORIO DA SESSAO DE RECARGA           |\n");
+    separador();
+
+    linha_rel("Usuario", s->nome);
+    linha_rel("Tipo", tipo_str);
+
+    snprintf(buf, sizeof(buf), "%02d:%02d", s->hora_inicio, s->minuto_inicio);
+    linha_rel("Hora inicio", buf);
+
+    snprintf(buf, sizeof(buf), "%02d:%02d", hora_fim, min_fim);
+    linha_rel("Hora fim", buf);
+
+    if (h > 0) snprintf(buf, sizeof(buf), "%dh %02dmin", h, m);
+    else        snprintf(buf, sizeof(buf), "%d min", m);
+    linha_rel("Duracao", buf);
+
+    snprintf(buf, sizeof(buf), "%.2f kWh", s->energia_kwh);
+    linha_rel("Energia", buf);
+
+    snprintf(buf, sizeof(buf), "Tarifa %s", tarifa_str);
+    linha_rel("Modalidade", buf);
+
+    snprintf(buf, sizeof(buf), "R$ %.2f/kWh", s->tarifa_aplicada);
+    linha_rel("Tarifa", buf);
+
+    separador();
+
+    snprintf(buf, sizeof(buf), "R$ %.2f", s->custo_total);
+    linha_rel("CUSTO TOTAL", buf);
+
+    separador();
+    printf("\n");
+    exibir_status_led(s->status);
+}
+
 int main(void)
 {
     return 0;
