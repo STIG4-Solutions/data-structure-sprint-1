@@ -1,15 +1,28 @@
-# ⚡ EV Charger Simulator — Sprint 1
+# ChargGrid — Simulador de Sessão de Recarga EV
 
-Simulador de sessão de recarga para veículos elétricos em C puro.  
-**FIAP · Análise e Desenvolvimento de Sistemas**
+**Sprint 1 — Estruturas de Dados em C**
+FIAP · Ciência da Computação
+
+---
+
+## Equipe Stig4 Solutions
+
+| Nome                  | RM     |
+|-----------------------|--------|
+| Gabriel Fagundes      | 569074 |
+| Gabriel Freitas       | 572943 |
+| Giovanni Merlotti     | 573721 |
+| Glauco Kelly          | 572840 |
+| Sergio Augusto Amaral | 570184 |
+| Thiago Renatino       | 569073 |
 
 ---
 
 ## Sobre o projeto
 
-Este programa simula o funcionamento de um terminal de recarga para veículos elétricos, rodando diretamente no terminal. O operador informa os dados da sessão (placa, tipo de usuário, carregador, nível de bateria, tempo e horário), e o programa calcula automaticamente a energia consumida, aplica a tarifa correta e exibe um relatório formatado ao final.
+Programa em C que simula o funcionamento de um terminal de recarga para veículos elétricos, rodando diretamente no terminal. O operador informa os dados da sessão (nome, tipo de plano, horário e duração), e o programa calcula automaticamente a energia consumida, aplica a tarifa correta e exibe um relatório formatado ao final.
 
-O projeto foi desenvolvido para o Sprint 1 da disciplina de Linguagem C, cobrindo os critérios de avaliação: estruturas condicionais, repetição, lógica de sessão, tarifação, organização de código e entrada/saída de dados.
+O equipamento simulado é o **GW7K-HCA-20** (linha HCA G2) — carregador CA monofásico de **7,4 kW**.
 
 ---
 
@@ -19,123 +32,153 @@ O projeto foi desenvolvido para o Sprint 1 da disciplina de Linguagem C, cobrind
 
 ```bash
 # Compilar
-gcc main.c -o ev_charger
+gcc simulador_recarga.c -o simulador_recarga.exe
 
 # Executar
-./ev_charger          # Linux/macOS
-ev_charger.exe        # Windows
+.\simulador_recarga.exe          # Windows
+./simulador_recarga              # Linux/macOS
 
-# Compilar e executar de uma vez
-gcc main.c -o ev_charger && ./ev_charger
+# Compilar e executar de uma vez (Windows)
+gcc simulador_recarga.c -o simulador_recarga.exe && .\simulador_recarga.exe
 ```
-
-**No VS Code:** instale a extensão `C/C++` (ms-vscode.cpptools), abra a pasta do projeto e use o terminal integrado com Ctrl+`.
 
 ---
 
 ## Fluxo da sessão
 
 ```
-Início
- ├─ Entrada de dados (placa, tipo de usuário, carregador, bateria, tempo, hora)
- ├─ Validação de cada entrada com do-while (rejeita valores fora do intervalo)
- ├─ Detecção de horário de ponta (18h–21h aplica tarifa majorada)
- ├─ Cálculo de energia: acumula potencia_kw / 60.0 por minuto (loop for)
- ├─ Cálculo de tarifa: switch por tipo de usuário + if para horário de ponta
- ├─ Barra de progresso no terminal (loop for com 20 passos)
- └─ Relatório final com todos os dados da sessão
+STANDBY (LED verde fixo)
+    │
+    ▼
+Coleta de dados
+    ├── Nome do usuário
+    ├── Tipo de plano (1 = Comum / 2 = Fidelidade)
+    ├── Horário de início (HH:MM)
+    └── Duração desejada (1–480 minutos)
+    │
+    ▼
+CARREGANDO (LED azul fixo)
+    ├── Loop for: acumula energia minuto a minuto
+    └── Barra de progresso animada no terminal
+    │
+    ▼
+CONCLUÍDO (LED verde piscando)
+    │
+    ▼
+Relatório da sessão
 ```
 
-O programa permite realizar múltiplas sessões consecutivas — ao final de cada uma, o operador pode iniciar uma nova ou encerrar.
+O programa permite múltiplas sessões consecutivas — ao final de cada uma, o operador pode iniciar uma nova ou encerrar.
 
 ---
 
 ## Tarifação
 
-A tarifa varia conforme o tipo de usuário e o horário de início da recarga:
+A tarifa varia conforme o tipo de plano e o horário de início da recarga:
 
-| Usuário  | Fora de ponta | Horário de ponta (18h–21h) |
-|----------|---------------|----------------------------|
-| Comum    | R$ 1,20/kWh   | R$ 1,85/kWh                |
-| Premium  | R$ 1,08/kWh   | R$ 1,67/kWh *(−10%)*       |
-| Frota    | R$ 0,90/kWh   | R$ 1,85/kWh                |
+| Plano      | Fora de ponta | Horário de ponta (18h–21h) |
+|------------|---------------|----------------------------|
+| Comum      | R$ 0,85/kWh   | R$ 1,40/kWh                |
+| Fidelidade | R$ 0,70/kWh   | R$ 0,70/kWh (fixo)         |
 
-Usuários **Premium** recebem 10% de desconto em qualquer horário. Usuários de **Frota** têm tarifa reduzida fora do pico, mas pagam a tarifa cheia no horário de ponta.
+- Usuários **Fidelidade** pagam tarifa fixa em qualquer horário.
+- Usuários **Comuns** pagam tarifa majorada se a sessão iniciar entre 18h e 21h.
 
-**Potência simulada por tipo de carregador:**
+**Potência do equipamento:** 7,4 kW (fixo — GW7K-HCA-20)
 
-| Carregador | Tecnologia | Potência |
-|------------|-----------|----------|
-| Lento      | AC        | 7,4 kW   |
-| Rápido     | DC        | 50 kW    |
-| Ultra      | DC        | 150 kW   |
+**Fórmulas:**
 
-**Fórmula do custo:** `energia_kWh × tarifa_R$/kWh`  
-**Fórmula da energia:** `(potencia_kW / 60.0) × tempo_minutos`
+```
+Energia (kWh) = (7,4 / 60,0) × duração_em_minutos
+Custo   (R$)  = energia_kWh × tarifa_aplicada
+```
 
 ---
 
 ## Estruturas de C utilizadas
 
 ### Condicionais (`if/else` e `switch`)
-- `switch` seleciona a tarifa base de acordo com o tipo de usuário (Comum, Premium, Frota)
-- `switch` também determina a potência do carregador (Lento, Rápido, Ultra)
-- `if/else` aplica a majoração do horário de ponta e o desconto Premium
-- `if/else` valida se a bateria ultrapassaria 100% após a recarga
+
+- `if/else` em `calcular_tarifa()` — decide a tarifa conforme plano e horário
+- `if/else` em `coletar_dados()` — valida o formato HH:MM do horário de entrada
+- `switch` em `exibir_status_led()` — exibe o estado do LED conforme o status da sessão
+- `switch` em `main()` — exibe a mensagem de encerramento conforme o resultado da sessão
 
 ### Repetição (`for` e `do-while`)
-- `for` em `calcular_energia()`: acumula a energia consumida minuto a minuto
-- `for` em `simular_progresso()`: desenha a barra de progresso passo a passo
-- `do-while` em `ler_inteiro()`: repete a leitura até o usuário digitar um valor válido
-- `do-while` no `main()`: mantém o programa rodando para múltiplas sessões
 
-### Struct
-`Sessao` centraliza todos os dados de uma recarga em uma única estrutura — placa, tipo de usuário, carregador, bateria inicial/final, tempo, energia, tarifa e valor total — e é passada por ponteiro para a função de relatório.
+- `do-while` em `ler_inteiro()` — repete a leitura até o usuário digitar um valor válido
+- `do-while` em `coletar_dados()` — repete a leitura do horário até o formato ser válido
+- `do-while` em `main()` — mantém o programa ativo para múltiplas sessões consecutivas
+- `for` em `simular_recarga()` — itera minuto a minuto acumulando energia consumida
+- `for` interno em `simular_recarga()` — desenha a barra de progresso com 20 passos
+
+### Struct e Enum
+
+- `SessaoRecarga` — centraliza todos os dados de uma sessão (nome, plano, horário, duração, energia, tarifa, custo, status)
+- `StatusLED` — enum com os quatro estados do equipamento: `STANDBY`, `CARREGANDO`, `CONCLUIDO`, `FALHA`
 
 ### Funções
-O código é dividido em funções com responsabilidade única: `calcular_energia()`, `calcular_tarifa()`, `ler_inteiro()`, `simular_progresso()`, `exibir_relatorio()` e auxiliares de nomes (`nome_tipo_usuario()`, `nome_carregador()`).
+
+| Função | Responsabilidade |
+| ------ | ---------------- |
+| `exibir_cabecalho()` | Exibe o cabeçalho do sistema |
+| `exibir_status_led()` | Exibe o estado atual do equipamento (LED) |
+| `ler_inteiro()` | Lê e valida qualquer entrada numérica inteira |
+| `coletar_dados()` | Coleta todos os dados da sessão do operador |
+| `calcular_tarifa()` | Retorna o valor R$/kWh conforme tipo e horário |
+| `nome_tarifa()` | Retorna o nome da modalidade tarifária para exibição |
+| `simular_recarga()` | Executa a simulação minuto a minuto com barra visual |
+| `exibir_relatorio()` | Formata e imprime o relatório completo da sessão |
 
 ---
 
 ## Exemplo de saída
 
 ```
-*******************************************************
-*     ⚡  EV CHARGER SIMULATOR  —  Sprint 1  ⚡     *
-*       Simulador de Sessao de Recarga em C           *
-*******************************************************
++--------------------------------------------------+
+|    CHARGEGRID  --  Simulador de Recarga EV      |
+|    GW7K-HCA-20  |  CA monofasico  |  7,4 kW     |
++--------------------------------------------------+
 
-=======================================================
-  NOVA SESSAO DE RECARGA  #001
-=======================================================
-[VEICULO]
-  Placa do veiculo (ex: ABC1234): EVT1234
-[TIPO DE USUARIO]
-  1 - Comum
-  2 - Premium (10% de desconto)
-  3 - Frota
-  Selecione: 2
-...
-=======================================================
-  RELATORIO DA SESSAO  #001
-=======================================================
-  Placa             : EVT1234
-  Tipo de usuario   : Premium (10% desc.)
-  Carregador        : Rapido — DC 50 kW
--------------------------------------------------------
-  Bateria inicial   :  30%
-  Bateria final     :  79%
-  Tempo de recarga  : 30 min
-  Energia consumida : 25.000 kWh
--------------------------------------------------------
-  Hora de inicio    : 19h00
-  Horario           : PONTA (18h–21h) — tarifa majorada
-  Tarifa aplicada   : R$ 1.67/kWh
--------------------------------------------------------
-  VALOR TOTAL       : R$ 41.62
-=======================================================
+[ STATUS ] LED VERDE  (fixo)     -- Standby, aguardando
+
+Nome do usuario: Thiago Renatino
+
+  Opcoes de plano:
+    1 -- Comum      (tarifa normal R$0,85 | ponta R$1,40)
+    2 -- Fidelidade (tarifa fixa R$0,70/kWh)
+Selecione o plano (1 ou 2): 2
+
+  Horario de ponta: 18h00 ate 21h00 (tarifa mais cara)
+Hora de inicio (HH:MM): 08:00
+Duracao em minutos (1-480): 60
+
+[ STATUS ] LED AZUL   (fixo)     -- Recarga em andamento
+
+Recarga iniciada: 60 minutos @ 7.4 kW
+
+  [####################] 100%  7.40 kWh
+
++--------------------------------------------------+
+|        RELATORIO DA SESSAO DE RECARGA           |
++--------------------------------------------------+
+| Usuario     : Thiago Renatino                   |
+| Tipo        : Fidelidade                        |
+| Hora inicio : 08:00                             |
+| Hora fim    : 09:00                             |
+| Duracao     : 1h 00min                          |
+| Energia     : 7.40 kWh                          |
+| Modalidade  : Tarifa Fidelidade                 |
+| Tarifa      : R$ 0.70/kWh                       |
++--------------------------------------------------+
+| CUSTO TOTAL : R$ 5.18                           |
++--------------------------------------------------+
+
+[ STATUS ] LED VERDE  (piscando) -- Sessao concluida
+
+Sessao encerrada. Desconecte o cabo com seguranca.
+
+Iniciar nova sessao? (1=Sim / 0=Nao): 0
+
+Sistema encerrado. Ate logo!
 ```
-
----
-
-*Desenvolvido por Thiago Renatino*
